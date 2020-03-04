@@ -12,7 +12,7 @@
 
 <meta name="author" content="Nils Petras" />
 
-<meta name="date" content="2020-02-10" />
+<meta name="date" content="2020-03-04" />
 
 <title>Item Pool Visualization</title>
 
@@ -95,7 +95,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Item Pool Visualization</h1>
 <h4 class="author">Nils Petras</h4>
-<h4 class="date">2020-02-10</h4>
+<h4 class="date">2020-03-04</h4>
 
 
 <div id="TOC">
@@ -297,13 +297,13 @@ If any factor loading is below .1 or any center distance below 0, it is set to t
 <h4>Using Excel files</h4>
 <p>Excel files have the advantage that you can simply copy and paste your SEM estimates into the spreadsheets and the input function of the IPV package (<code>input_excel()</code>) does the rest. The files need to be structured as in the example, that you can find here:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;IPV_global.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;IPV&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>)
-<span class="co">#&gt; [1] &quot;C:/Users/petras/AppData/Local/Temp/RtmpaW3Nl3/Rinst1fd4724d6c/IPV/extdata/IPV_global.xlsx&quot;</span>
+<span class="co">#&gt; [1] &quot;C:/Users/petras/AppData/Local/Temp/RtmpeKfMJe/Rinst3901b1f1744/IPV/extdata/IPV_global.xlsx&quot;</span>
 <span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;IPV_DSSEI.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;IPV&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>)
-<span class="co">#&gt; [1] &quot;C:/Users/petras/AppData/Local/Temp/RtmpaW3Nl3/Rinst1fd4724d6c/IPV/extdata/IPV_DSSEI.xlsx&quot;</span>
+<span class="co">#&gt; [1] &quot;C:/Users/petras/AppData/Local/Temp/RtmpeKfMJe/Rinst3901b1f1744/IPV/extdata/IPV_DSSEI.xlsx&quot;</span>
 <span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;IPV_SMTQ.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;IPV&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>)
-<span class="co">#&gt; [1] &quot;C:/Users/petras/AppData/Local/Temp/RtmpaW3Nl3/Rinst1fd4724d6c/IPV/extdata/IPV_SMTQ.xlsx&quot;</span>
+<span class="co">#&gt; [1] &quot;C:/Users/petras/AppData/Local/Temp/RtmpeKfMJe/Rinst3901b1f1744/IPV/extdata/IPV_SMTQ.xlsx&quot;</span>
 <span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;IPV_RSES.xlsx&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;IPV&quot;</span>, <span class="dt">mustWork =</span> <span class="ot">TRUE</span>)
-<span class="co">#&gt; [1] &quot;C:/Users/petras/AppData/Local/Temp/RtmpaW3Nl3/Rinst1fd4724d6c/IPV/extdata/IPV_RSES.xlsx&quot;</span></code></pre></div>
+<span class="co">#&gt; [1] &quot;C:/Users/petras/AppData/Local/Temp/RtmpeKfMJe/Rinst3901b1f1744/IPV/extdata/IPV_RSES.xlsx&quot;</span></code></pre></div>
 <p>As you can see, there is a file for each test, and a global file. You might want to use a copy as your template, so you can just fill in your values. Open a file to see how it works.</p>
 <p>On sheet 1 you need to provide the factor loadings from your SEM estimation results, on sheet 2 you need to provide the named and complete latent correlation matrix. On sheet 1, “factor” contains a single factor name and “factor_loading” the factor loadings of items on that factor (not squared). “subfactor” contains the names of grouped factors and “subfactor_loading” the factor loadings of items on these factors (not squared). “item” contains the item names. Therefore, each row contains the full information on the respective item.<br />
 Read these excel sheets using input_excel. In the example:</p>

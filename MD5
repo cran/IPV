@@ -1,11 +1,12 @@
-75a1f66804bb5fbc0faa689283ec8b9c *DESCRIPTION
+f75ba6f232cb86300f4bc4510d886392 *DESCRIPTION
 baeda693f4ac5f8728fcb37da1e2120a *NAMESPACE
+1cec2ebdd7ff6af3a194941da8489bbc *NEWS.md
 56ad9387a6aa2229d47e59bc8137cb30 *R/IPV.R
 a1c9855e0e2ffc3dedca24345692cb71 *R/coord_facets.R
 68ea628996c8f045b4427db77b604d1c *R/coord_items.R
 94173498a77edc146def46f445b656b1 *R/data.R
 fa5a9f51dc24250d365ccee4c8c77715 *R/facet_chart.R
-815ada77eed79d77cfd30bd62ac854e2 *R/input_excel.R
+f26d2a9210b4f3073afd8da4695c8b71 *R/input_excel.R
 578a52df86f3a5193fba039d3d4a6315 *R/input_manual_nested.R
 f8285256919dc8202fa597aceedf2f7d *R/input_manual_process.R
 16a54a3f28ed6469fbebf1162740887d *R/input_manual_simple.R
@@ -18,7 +19,7 @@ e1ac1a83c36d27af4ba89118bbb42a19 *data/SMTQ.rda
 ba41d157613e7d9352f31d0d3d019a15 *data/self_confidence.rda
 108e7f199580663d6bf4e82aa880af50 *inst/doc/ipv-vignette.R
 6cb77805a105e492b79a265f9428650e *inst/doc/ipv-vignette.Rmd
-d2b3bb547ef29bffdc7e72bf89b89bb6 *inst/doc/ipv-vignette.html
+ad34fe740930fb09a72410fa99336eb2 *inst/doc/ipv-vignette.html
 0fdea8ba6a72e3ec8ff7040198702454 *inst/extdata/DSSEI.xlsx
 828bd34c76cee7511e353f161cccc987 *inst/extdata/IPV_DSSEI.xlsx
 574a200dae052c7f3a41a512d5ab206a *inst/extdata/IPV_RSES.xlsx
