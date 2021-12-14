@@ -4,10 +4,17 @@
 #'
 #' @param data SEM estimates in the appropriate format, given by the input
 #'   functions.
+#' @param cd_method character; method to summarize center distances, either
+#'   "mean" or "aggregate", see details; defaults to "aggregate".
+#' @param facet_order character; vector of facet names in desired order
+#'   (counter-clockwise); defaults to NULL, in which case the order is based on
+#'   the correlation matrix columns in 'data'.
 #' @param subradius integer; same unit as center distances; radius of the facet
 #'   circles; defaults to 0, in which case an appropriate value is estimated.
 #' @param tick numeric; axis tick position; defaults to 0, in which case an
 #'   appropriate value is estimated.
+#' @param rotate_tick_label numeric; number of positions to move the tick label
+#'   (counter-clockwise); defaults to 0.
 #' @param rotate_radians integer; radian angle to rotate the chart
 #'   counter-clockwise by; use fractions of pi (e.g. pi/2 = 90 degrees).
 #' @param rotate_degrees integer; angle in degrees to rotate the chart
@@ -27,8 +34,11 @@
 #' @seealso \code{\link{plot_facets}} \code{\link{facet_chart}}
 coord_facets <- function (
   data,
+  cd_method = "aggregate",
+  facet_order = NULL,
   subradius = 0,
   tick = 0,
+  rotate_tick_label = 0,
   rotate_radians = 0,
   rotate_degrees = 0,
   dist_test_label = 2 / 3,
@@ -88,7 +98,13 @@ coord_facets <- function (
   rotate <- rotate_radians + rotate_degrees * pi / 180
   rotate_test_label <- rotate_test_label_radians +
     rotate_test_label_degrees * pi / 180
-  mcd <- data$cds$mean_cd
+  if(cd_method == "aggregate") mcd <- data$cds$aggregate_cd
+  if(cd_method == "mean") mcd <- data$cds$mean_cd
+  if (is.null(facet_order)) {
+    facet_order <- colnames(data$cors)
+  }
+  # ignore additional names for calls by coord_nested()
+  facet_order <- facet_order[facet_order %in% colnames(data$cors)]
 
   # default axis tick and subradius need to scale based on the data, to avoid
   # messy results
@@ -96,6 +112,7 @@ coord_facets <- function (
     tick <- signif(max(.15 * max(mcd), .3 * min(mcd)), 1)
     sc <- rep(c(1, 2, 5), 5) * 10 ^ rep(-3:1, each = 3)
     tick <- sc[which.min(abs(tick - sc))]
+    message(paste("Axis tick set to ", tick," based on the data.", sep = ""))
   }
   if (subradius == 0) {
     subradius <- max(mean(mcd), .25 * max(mcd)) *
@@ -119,12 +136,16 @@ coord_facets <- function (
                         rho = 0,
                         radius = NA)
   row.names(p_circs) <- c(levels(data$cds$factor),
-                          colnames(data$cors))
+                          facet_order)
   p_circs$radius[1] <- max(mcd) + 2 * subradius
   p_circs$radius[2:length(p_circs$radius)] <- subradius
-  mean_cds <- tapply(data$cds$cd, data$cds$subfactor, mean)
-  p_circs[colnames(data$cors), "rho"] <- mean_cds[colnames(data$cors)] + subradius
-  rm(mean_cds)
+  if(cd_method == "aggregate"){
+    tot_cds <- tapply(data$cds$aggregate_cd, data$cds$subfactor, mean)}
+  if(cd_method == "mean") {
+    tot_cds <- tapply(data$cds$cd, data$cds$subfactor, mean)}
+
+  p_circs[facet_order, "rho"] <- tot_cds[facet_order] + subradius
+  rm(tot_cds)
   p_circs$phi <- c(0, 2 * pi / cplx * c(1:cplx)) + rotate
   p_circs$phi[p_circs$phi > 2 * pi] <-
     p_circs$phi[p_circs$phi > 2 * pi] - 2 * pi
@@ -147,7 +168,7 @@ coord_facets <- function (
                        rho2 = NA,
                        rho3 = NA,
                        phi = NA)
-  row.names(p_axes) <- c(colnames(data$cors))
+  row.names(p_axes) <- c(facet_order)
   p_axes$phi <- utils::tail(p_circs$phi, cplx)
   p_axes$rho1 <- utils::tail(p_circs$rho, cplx) - subradius
   p_axes$rho2 <- p_axes$rho1 + 2 * subradius
@@ -168,7 +189,7 @@ coord_facets <- function (
   c_axes$y3 <- round(sin(p_axes$phi) * p_axes$rho3, digits = 7)
 
   axis_tick <- data.frame(rho = tick, phi = NA, x = NA, y = NA)
-  axis_tick$phi <- min(p_circs$phi) + pi / cplx
+  axis_tick$phi <- min(p_circs$phi) + (pi + 2 * pi * rotate_tick_label) / cplx
   axis_tick$x <- round(cos(axis_tick$phi) * axis_tick$rho, digits = 7)
   axis_tick$y <- round(sin(axis_tick$phi) * axis_tick$rho, digits = 7)
 
@@ -201,7 +222,7 @@ coord_facets <- function (
                      xnew = NA,
                      ynew = NA)
 
-  a <- row.names(data$cors)
+  a <- facet_order
   a <- c(a, a[1])
   b <- NULL
   for (k in 1:cplx) {
@@ -210,14 +231,17 @@ coord_facets <- function (
     a <- c(a, a[1])
   }
   cors$V1 <- b
-  cors$V2 <- unlist(lapply(row.names(data$cors), FUN = rep, times = cplx - 1))
+  cors$V2 <- unlist(lapply(facet_order, FUN = rep, times = cplx - 1))
 
   for (k in 1:n) {
     cors$label[k] <- data$cors[cors$V1[k], cors$V2[k]]
   }
   cors$label <- as.character(cors$label)
   # exclude leading 0's for aesthetic reasons
-  cors$label[cors$label != 1 & cors$label != 0] <- substr(cors$label, 2, 4)
+  cors$label[cors$label < 0] <-
+    paste("-", substr(cors$label[cors$label < 0], 3, 5), sep = "")
+  cors$label[cors$label != 1 & cors$label > 0] <-
+    substr(cors$label[cors$label != 1 & cors$label > 0], 2, 4)
 
   cors$x <- c_circs[cors$V2, "x"]
   cors$y <- c_circs[cors$V2, "y"]

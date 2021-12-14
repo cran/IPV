@@ -10,6 +10,8 @@ plot_nested(
   file_name = "none",
   file_width = 10,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
   cor_labels_tests = TRUE,
   cor_labels_facets = TRUE,
@@ -17,7 +19,6 @@ plot_nested(
   color_nested = "black",
   fade = 85,
   font = "sans",
-  show_xarrows = FALSE,
   size_construct_label = 1,
   size_test_labels = 1,
   size_facet_labels = 1,
@@ -27,6 +28,8 @@ plot_nested(
   width_circles_inner = 1,
   width_tick = 1,
   width_tick_inner = 1,
+  title = NULL,
+  size_title = 1,
   size_tick_label = 1,
   size_cor_labels = 1,
   size_cor_labels_inner = 1,
@@ -41,11 +44,18 @@ plot_nested(
 \item{size}{integer; changes the size of most chart objects simultaneously.}
 
 \item{file_name}{character; name of the file to save. Supported formats are:
-"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".}
+"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+"none".}
 
 \item{file_width}{integer; file width in inches; defaults to 10.}
 
 \item{file_height}{integer; file height in inches; defaults to 10.}
+
+\item{zoom_x}{integer; vector with two values, the edges of the zoomed section
+on the x-axis; defaults to NULL.}
+
+\item{zoom_y}{integer; vector with two values, the edges of the zoomed section
+on the y-axis; defaults to NULL.}
 
 \item{dpi}{integer; resolution in dots per inch for "png" and "jpeg" files;
 defaults to 500.}
@@ -65,9 +75,6 @@ between facets as text.}
 
 \item{font}{character; text font, use extrafonts to access additional fonts;
 defaults to "sans", which is "Helvetica".}
-
-\item{show_xarrows}{logical; if \code{TRUE}, shows correlation arrows between
-facets of different tests, according to xarrows.}
 
 \item{size_construct_label}{integer; construct label font size relative to
 default.}
@@ -89,6 +96,10 @@ default.}
 
 \item{width_tick_inner}{integer; nested axis tick line width relative to
 default.}
+
+\item{title}{character; overall chart title; defaults to NULL.}
+
+\item{size_title}{integer; title font size relative to default.}
 
 \item{size_tick_label}{integer; axis tick label font size relative to default.}
 

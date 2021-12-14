@@ -10,6 +10,8 @@ plot_items(
   file_name = "none",
   file_width = 12,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
   color = "black",
   color2 = "black",
@@ -17,6 +19,8 @@ plot_items(
   fade_grid_major = 15,
   fade_grid_minor = 65,
   font = "sans",
+  title = NULL,
+  size_title = 1,
   size_tick_label = 1,
   size_test_label = 1,
   size_facet_labels = 1,
@@ -33,11 +37,18 @@ plot_items(
 \item{size}{integer; changes the size of most chart objects simultaneously.}
 
 \item{file_name}{character; name of the file to save. Supported formats are:
-"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".}
+"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+"none".}
 
 \item{file_width}{integer; file width in inches; defaults to 12.}
 
 \item{file_height}{integer; file height in inches; defaults to 10.}
+
+\item{zoom_x}{integer; vector with two values, the edges of the zoomed
+section on the x-axis; defaults to NULL.}
+
+\item{zoom_y}{integer; vector with two values, the edges of the zoomed
+section on the y-axis; defaults to NULL.}
 
 \item{dpi}{integer; resolution in dots per inch for "png" and "jpeg" files;
 defaults to 500.}
@@ -57,6 +68,10 @@ lines between 0 = "black" and 100 = "white" in steps of 1; defaults to 65.}
 
 \item{font}{character; text font, use extrafonts to access additional fonts;
 defaults to "sans", which is "Helvetica".}
+
+\item{title}{character; overall chart title; defaults to NULL.}
+
+\item{size_title}{integer; title font size relative to default.}
 
 \item{size_tick_label}{integer; axis tick label font size relative to
 default.}

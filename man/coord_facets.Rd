@@ -6,8 +6,11 @@
 \usage{
 coord_facets(
   data,
+  cd_method = "aggregate",
+  facet_order = NULL,
   subradius = 0,
   tick = 0,
+  rotate_tick_label = 0,
   rotate_radians = 0,
   rotate_degrees = 0,
   dist_test_label = 2/3,
@@ -19,11 +22,21 @@ coord_facets(
 \item{data}{SEM estimates in the appropriate format, given by the input
 functions.}
 
+\item{cd_method}{character; method to summarize center distances, either
+"mean" or "aggregate", see details; defaults to "aggregate".}
+
+\item{facet_order}{character; vector of facet names in desired order
+(counter-clockwise); defaults to NULL, in which case the order is based on
+the correlation matrix columns in 'data'.}
+
 \item{subradius}{integer; same unit as center distances; radius of the facet
 circles; defaults to 0, in which case an appropriate value is estimated.}
 
 \item{tick}{numeric; axis tick position; defaults to 0, in which case an
 appropriate value is estimated.}
+
+\item{rotate_tick_label}{numeric; number of positions to move the tick label
+(counter-clockwise); defaults to 0.}
 
 \item{rotate_radians}{integer; radian angle to rotate the chart
 counter-clockwise by; use fractions of pi (e.g. pi/2 = 90 degrees).}

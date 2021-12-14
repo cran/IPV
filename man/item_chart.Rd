@@ -6,13 +6,17 @@
 \usage{
 item_chart(
   data,
+  facet_order = NULL,
   file_name = "none",
   size = 1,
   font = "sans",
   rotate_radians = 0,
   rotate_degrees = 0,
+  grid_limit = 0,
   file_width = 12,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
   color = "black",
   color2 = "black",
@@ -26,6 +30,8 @@ item_chart(
   width_items = 1,
   length_items = 1,
   length_ratio_items = 1.5,
+  title = NULL,
+  size_title = 1,
   size_tick_label = 1,
   size_test_label = 1,
   size_facet_labels = 1,
@@ -38,8 +44,13 @@ item_chart(
 \item{data}{SEM estimates in the appropriate format, given by the input
 functions.}
 
+\item{facet_order}{character; vector of facet names in desired order
+(counter-clockwise); defaults to NULL, in which case the order is based on
+the correlation matrix columns in 'data'.}
+
 \item{file_name}{character; name of the file to save. Supported formats are:
-"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".}
+"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+"none".}
 
 \item{size}{integer; changes the size of most chart objects simultaneously.}
 
@@ -52,9 +63,18 @@ counter-clockwise by; use fractions of pi (e.g. pi/2 = 90 degrees).}
 \item{rotate_degrees}{integer; angle in degrees to rotate the chart
 counter-clockwise by.}
 
+\item{grid_limit}{integer; upper limit to which the grid lines should be
+drawn; defaults to 0, in which case an appropriate value is estimated.}
+
 \item{file_width}{integer; file width in inches; defaults to 12.}
 
 \item{file_height}{integer; file height in inches; defaults to 10.}
+
+\item{zoom_x}{integer; vector with two values, the edges of the zoomed
+section on the x-axis; defaults to NULL.}
+
+\item{zoom_y}{integer; vector with two values, the edges of the zoomed
+section on the y-axis; defaults to NULL.}
 
 \item{dpi}{integer; resolution in dots per inch for "png" and "jpeg" files;
 defaults to 500.}
@@ -91,6 +111,10 @@ label counter-clockwise by.}
 
 \item{length_ratio_items}{integer; relative item bar length; defaults to 1.5.}
 
+\item{title}{character; overall chart title; defaults to NULL.}
+
+\item{size_title}{integer; title font size relative to default.}
+
 \item{size_tick_label}{integer; axis tick label font size relative to
 default.}
 
@@ -123,6 +147,23 @@ When changing the size of objects, consider the \code{size}
   Pdf files will be vector based and can be scaled arbitrarily. For other
   formats use \code{file_width}, \code{file_height}, and \code{dpi} to avoid
   later rescaling and loss of quality.
+
+  Instead of using screenshots to crop the chart, it is highly recommendable
+  to use \code{zoom_x} and \code{zoom_y}. This allows for vector-based
+  graphics quality when showing sections of the chart. With this cropping
+  method, use \code{file_width} to set the overall size of the file output,
+  \code{file_height} will automatically adjust to retain the correct aspect
+  ratio, if both \code{zoom_x} and \code{zoom_y} are provided.
+
+  Consider adding title and caption in your typesetting software (LaTeX, MS
+  Word, ...), not here. The option to add a title is only a quick and dirty
+  shurtcut. It reduces chart size and is inflexible. Adding the title
+  manually will provide additional options, but requires you to save to a
+  file manually. To manually add a title or caption use
+  \code{\link[ggplot2]{labs}}.
+
+  Using a \code{grid_limit} higher than the default will re-scale the whole
+  chart, while a value below the default will only remove grid lines.
 }
 \examples{
 # as simple as that

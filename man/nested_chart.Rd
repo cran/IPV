@@ -6,12 +6,14 @@
 \usage{
 nested_chart(
   data,
+  cd_method = "aggregate",
+  test_order = NULL,
+  facet_order = NULL,
   xarrows = NULL,
   subradius = 0,
   file_name = "none",
   size = 1,
   relative_scaling = 0,
-  show_xarrows = FALSE,
   font = "sans",
   rotate_radians = 0,
   rotate_degrees = 0,
@@ -19,12 +21,15 @@ nested_chart(
   subrotate_degrees = 0,
   file_width = 10,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
-  color_global = "black",
-  color_nested = "black",
+  color_global = "#11C1FF",
+  color_nested = "#007AD6",
   fade = 85,
   cor_spacing = 0,
   tick = 0,
+  rotate_tick_label = 0,
   dist_construct_label = 10,
   rotate_construct_label_radians = 0,
   rotate_construct_label_degrees = 0,
@@ -33,6 +38,8 @@ nested_chart(
   rotate_test_labels_degrees = 0,
   cor_labels_tests = TRUE,
   cor_labels_facets = TRUE,
+  title = NULL,
+  size_title = 1,
   size_construct_label = 1,
   size_test_labels = 1,
   size_facet_labels = 1,
@@ -54,6 +61,17 @@ nested_chart(
 \item{data}{SEM estimates in the appropriate format, given by the input
 functions.}
 
+\item{cd_method}{character; method to summarize center distances, either
+"mean" or "aggregate", see details; defaults to "aggregate".}
+
+\item{test_order}{character; vector of test names in desired order
+(counter-clockwise); defaults to NULL, in which case the order is based on
+the correlation matrix columns in 'data'.}
+
+\item{facet_order}{character; vector of all facet names of all tests in
+desired order (counter-clockwise); defaults to NULL, in which case the order
+is based on the correlation matrix columns in 'data'.}
+
 \item{xarrows}{data frame containing information about additional correlation
 arrows between facets of different tests; see examples.}
 
@@ -61,16 +79,14 @@ arrows between facets of different tests; see examples.}
 circles; defaults to 0, in which case an appropriate value is estimated.}
 
 \item{file_name}{character; name of the file to save. Supported formats are:
-"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".}
+"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+"none".}
 
 \item{size}{integer; changes the size of most chart objects simultaneously.}
 
 \item{relative_scaling}{integer; relative size of the global chart scale
 compared to the nested facet chart scales; defaults to 0, in which case an
 appropriate value is estimated.}
-
-\item{show_xarrows}{logical; if \code{TRUE}, shows correlation arrows between
-facets of different tests, according to xarrows.}
 
 \item{font}{character; text font, use extrafonts to access additional fonts;
 defaults to "sans", which is "Helvetica".}
@@ -92,12 +108,18 @@ rotate the nested facet charts counter-clockwise by.}
 
 \item{file_height}{integer; file height in inches; defaults to 10.}
 
+\item{zoom_x}{integer; vector with two values, the edges of the zoomed
+section on the x-axis; defaults to NULL.}
+
+\item{zoom_y}{integer; vector with two values, the edges of the zoomed
+section on the y-axis; defaults to NULL.}
+
 \item{dpi}{integer; resolution in dots per inch for "png" and "jpeg" files;
 defaults to 500.}
 
-\item{color_global}{global accent color; defaults to "black".}
+\item{color_global}{global accent color; defaults to light blue ("#11C1FF").}
 
-\item{color_nested}{nested accent color; defaults to "black".}
+\item{color_nested}{nested accent color; defaults to blue ("#007AD6").}
 
 \item{fade}{integer; brightness of the gray tones between 0 (black) and 100
 (white) in steps of 1; defaults to 85.}
@@ -108,6 +130,9 @@ appropriate value is estimated.}
 
 \item{tick}{numeric; axis tick position; defaults to 0, in which case an
 appropriate value is estimated.}
+
+\item{rotate_tick_label}{numeric; number of positions to move the tick label
+(counter-clockwise); defaults to 0.}
 
 \item{dist_construct_label}{integer; position of the construct label relative
 to the surrounding circle; defaults to 10, in which case an appropriate
@@ -137,6 +162,10 @@ between tests as text.}
 
 \item{cor_labels_facets}{logical; if \code{TRUE}, shows the correlations
 between facets as text.}
+
+\item{title}{character; overall chart title; defaults to NULL.}
+
+\item{size_title}{integer; title font size relative to default.}
 
 \item{size_construct_label}{integer; construct label font size relative to
 default.}
@@ -181,7 +210,15 @@ Object of the class "ggplot".
 Creates a nested chart, showing several tests and their facets.
 }
 \details{
-To get tidy results, it is often required to use \code{rotate_} and
+To summarize center distances (\code{cd_method}), the "mean" method
+ computes the average center distance (compute cds first, summarize across
+ items second), while the "aggregate" method computes a center distance
+ based on the sum of the squared loadings (summarize across items first,
+ compute cds second). "Aggregate" (default) is recommended, because it is
+ more meaningful in cases with heterogeneous factor loadings, while "mean"
+ is the originally proposed method.
+
+ To get tidy results, it is often required to use \code{rotate_} and
  \code{subrotate_} for better alignment.
 
  If you set \code{subrotate_} to a single value, all nested facet charts will
@@ -201,6 +238,24 @@ To get tidy results, it is often required to use \code{rotate_} and
  Pdf files will be vector based and can be scaled arbitrarily. For other
  formats use \code{file_width}, \code{file_height}, and \code{dpi} to avoid
  later rescaling and loss of quality.
+
+ Instead of using screenshots to crop the chart, it is highly recommendable
+ to use \code{zoom_x} and \code{zoom_y}. This allows for vector-based
+ graphics quality when showing sections of the chart. With this cropping
+ method, use \code{file_width} to set the overall size of the file output,
+ \code{file_height} will automatically adjust to retain the correct aspect
+ ratio, if both \code{zoom_x} and \code{zoom_y} are provided.
+
+ If \code{facet1} or \code{facet2} is \code{NA} for a given xarrow, the arrow
+ will end on the test's circle. Note: this correlation is usually not part of
+ the model.
+
+ Consider adding title and caption in your typesetting software (LaTeX, MS
+ Word, ...), not here. The option to add a title is only a quick and dirty
+ shurtcut. It reduces chart size and is inflexible. Adding the title manually
+ will provide additional options, but requires you to save to a file
+ manually. To manually add a title or caption use
+ \code{\link[ggplot2]{labs}}.
 }
 \examples{
 # as simple as that
@@ -208,18 +263,18 @@ nested_chart(self_confidence, subradius = .6)
 
 # adding xarrows, in this example for all cases where the correlation between
 # facets exceeds the correlation between their respective tests.
-sc_arrows <- data.frame(test1 = rep(NA, 3),
-                        facet1 = NA,
-                        test2 = NA,
-                        facet2 = NA,
-                        value = NA)
-sc_arrows[1, ] <- c("DSSEI", "Ab", "RSES", "Ps", ".67")
-sc_arrows[2, ] <- c("DSSEI", "Ab", "SMTQ", "Cs", ".81")
-sc_arrows[3, ] <- c("SMTQ", "Ct", "RSES", "Ns", ".76")
+x <- data.frame(
+  test1 = rep(NA, 3),
+  facet1 = NA,
+  test2 = NA,
+  facet2 = NA,
+  value = NA)
+x[1, ] <- c("DSSEI", "Ab", "RSES", "Ps", ".67")
+x[2, ] <- c("DSSEI", "Ab", "SMTQ", "Cs", ".81")
+x[3, ] <- c("SMTQ", "Ct", "RSES", "Ns", ".76")
 nested_chart(self_confidence,
              subradius = .6,
-             xarrows = sc_arrows,
-             show_xarrows = TRUE)
+             xarrows = x)
 
 # rotating the nested facet charts one by one
 nested_chart(self_confidence,
@@ -228,10 +283,12 @@ nested_chart(self_confidence,
 
 # test without facets
 
-global <- system.file("extdata", "IPV_global.xlsx", package = "IPV", mustWork = TRUE)
-tests <- c(system.file("extdata", "IPV_DSSEI.xlsx", package = "IPV", mustWork = TRUE),
-           system.file("extdata", "IPV_SMTQ.xlsx", package = "IPV", mustWork = TRUE),
-           NA)
+global <- system.file(
+  "extdata", "IPV_global.xlsx", package = "IPV", mustWork = TRUE)
+tests <- c(
+  system.file("extdata", "IPV_DSSEI.xlsx", package = "IPV", mustWork = TRUE),
+  system.file("extdata", "IPV_SMTQ.xlsx", package = "IPV", mustWork = TRUE),
+  NA)
 x <- input_excel(global = global, tests = tests)
 nested_chart(x)
 

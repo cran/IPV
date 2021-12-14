@@ -6,6 +6,8 @@
 \usage{
 facet_chart(
   data,
+  cd_method = "aggregate",
+  facet_order = NULL,
   subradius = 0,
   file_name = "none",
   size = 1,
@@ -14,14 +16,19 @@ facet_chart(
   rotate_degrees = 0,
   file_width = 10,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
-  color = "black",
+  color = "#007AD6",
   fade = 85,
   tick = 0,
+  rotate_tick_label = 0,
   cor_labels = TRUE,
   dist_test_label = 2/3,
   rotate_test_label_radians = 0,
   rotate_test_label_degrees = 0,
+  title = NULL,
+  size_title = 1,
   size_cor_labels = 1,
   size_test_label = 1,
   size_facet_labels = 1,
@@ -35,11 +42,19 @@ facet_chart(
 \item{data}{SEM estimates in the appropriate format, given by the input
 functions.}
 
+\item{cd_method}{character; method to summarize center distances, either
+"mean" or "aggregate", see details; defaults to "aggregate".}
+
+\item{facet_order}{character; vector of facet names in desired order
+(counter-clockwise); defaults to NULL, in which case the order is based on
+the correlation matrix columns in 'data'.}
+
 \item{subradius}{integer; same unit as center distances; radius of the facet
 circles; defaults to 0, in which case an appropriate value is estimated.}
 
 \item{file_name}{character; name of the file to save. Supported formats are:
-"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".}
+"pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+"none".}
 
 \item{size}{integer; changes the size of most chart objects simultaneously.}
 
@@ -56,16 +71,25 @@ counter-clockwise by.}
 
 \item{file_height}{integer; file height in inches; defaults to 10.}
 
+\item{zoom_x}{integer; vector with two values, the edges of the zoomed
+section on the x-axis; defaults to NULL.}
+
+\item{zoom_y}{integer; vector with two values, the edges of the zoomed
+section on the y-axis; defaults to NULL.}
+
 \item{dpi}{integer; resolution in dots per inch for "png" and "jpeg" files;
 defaults to 500.}
 
-\item{color}{accent color; defaults to "black".}
+\item{color}{accent color; defaults to blue ("#007AD6").}
 
 \item{fade}{integer; brightness of the gray tones between 0 = "black" and 100
 = "white" in steps of 1; defaults to 85.}
 
 \item{tick}{numeric; axis tick position; defaults to 0, in which case an
 appropriate value is estimated.}
+
+\item{rotate_tick_label}{numeric; number of positions to move the tick label
+(counter-clockwise); defaults to 0.}
 
 \item{cor_labels}{logical; if \code{TRUE}, shows latent correlations between
 facets; defaults to \code{TRUE}.}
@@ -79,6 +103,10 @@ label counter-clockwise by; use fractions of pi (e.g. pi/2 = 90 degrees).}
 
 \item{rotate_test_label_degrees}{integer; angle in degrees to rotate the
 global label counter-clockwise by.}
+
+\item{title}{character; overall chart title; defaults to NULL.}
+
+\item{size_title}{integer; title font size relative to default.}
 
 \item{size_cor_labels}{integer; correlation font size relative to default.}
 
@@ -101,9 +129,31 @@ Object of the class "ggplot".
 Creates a facet chart, showing the facets of a test.
 }
 \details{
-Pdf files will be vector based and can be scaled arbitrarily. For
-  other formats use \code{file_width}, \code{file_height}, and \code{dpi} to
-  avoid later rescaling and loss of quality.
+To summarize center distances (\code{cd_method}), the "mean" method
+  computes the average center distance (compute cds first, summarize across
+  items second), while the "aggregate" method computes a center distance
+  based on the sum of the squared loadings (summarize across items first,
+  compute cds second). "Aggregate" (default) is recommended, because it is
+  more meaningful in cases with heterogeneous factor loadings, while "mean"
+  is the originally proposed method.
+
+  Pdf files will be vector based and can be scaled arbitrarily. For other
+  formats use \code{file_width}, \code{file_height}, and \code{dpi} to avoid
+  later rescaling and loss of quality.
+
+  Instead of using screenshots to crop the chart, it is highly recommendable
+  to use \code{zoom_x} and \code{zoom_y}. This allows for vector-based
+  graphics quality when showing sections of the chart. With this cropping
+  method, use \code{file_width} to set the overall size of the file output,
+  \code{file_height} will automatically adjust to retain the correct aspect
+  ratio, if both \code{zoom_x} and \code{zoom_y} are provided.
+
+  Consider adding title and caption in your typesetting software (LaTeX, MS
+  Word, ...), not here. The option to add a title is only a quick and dirty
+  shurtcut. It reduces chart size and is inflexible. Adding the title
+  manually will provide additional options, but requires you to save to a
+  file manually. To manually add a title or caption use
+  \code{\link[ggplot2]{labs}}.
 }
 \examples{
 # as simple as that:

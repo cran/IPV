@@ -4,18 +4,25 @@
 #'
 #'@param data SEM estimates in the appropriate format, given by the input
 #'  functions.
+#'@param cd_method character; method to summarize center distances, either
+#'  "mean" or "aggregate", see details; defaults to "aggregate".
+#'@param test_order character; vector of test names in desired order
+#'  (counter-clockwise); defaults to NULL, in which case the order is based on
+#'  the correlation matrix columns in 'data'.
+#'@param facet_order character; vector of all facet names of all tests in
+#'  desired order (counter-clockwise); defaults to NULL, in which case the order
+#'  is based on the correlation matrix columns in 'data'.
 #'@param xarrows data frame containing information about additional correlation
 #'  arrows between facets of different tests; see examples.
 #'@param subradius integer; same unit as center distances; radius of the facet
 #'  circles; defaults to 0, in which case an appropriate value is estimated.
 #'@param file_name character; name of the file to save. Supported formats are:
-#'  "pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".
+#'  "pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+#'  "none".
 #'@param size integer; changes the size of most chart objects simultaneously.
 #'@param relative_scaling integer; relative size of the global chart scale
 #'  compared to the nested facet chart scales; defaults to 0, in which case an
 #'  appropriate value is estimated.
-#'@param show_xarrows logical; if \code{TRUE}, shows correlation arrows between
-#'  facets of different tests, according to xarrows.
 #'@param font character; text font, use extrafonts to access additional fonts;
 #'  defaults to "sans", which is "Helvetica".
 #'@param rotate_radians integer; radian angle to rotate the chart
@@ -27,12 +34,16 @@
 #'  (e.g. pi/2 = 90 degrees).
 #'@param subrotate_degrees integer; angle or vector of angles in degrees to
 #'  rotate the nested facet charts counter-clockwise by.
+#'@param zoom_x integer; vector with two values, the edges of the zoomed
+#'  section on the x-axis; defaults to NULL.
+#'@param zoom_y integer; vector with two values, the edges of the zoomed
+#'  section on the y-axis; defaults to NULL.
 #'@param file_width integer; file width in inches; defaults to 10.
 #'@param file_height integer; file height in inches; defaults to 10.
 #'@param dpi integer; resolution in dots per inch for "png" and "jpeg" files;
 #'  defaults to 500.
-#'@param color_global global accent color; defaults to "black".
-#'@param color_nested nested accent color; defaults to "black".
+#'@param color_global global accent color; defaults to light blue ("#11C1FF").
+#'@param color_nested nested accent color; defaults to blue ("#007AD6").
 #'@param fade integer; brightness of the gray tones between 0 (black) and 100
 #'  (white) in steps of 1; defaults to 85.
 #'@param cor_spacing integer; if \code{correlations = TRUE}: width of the ring,
@@ -40,6 +51,8 @@
 #'  appropriate value is estimated.
 #'@param tick numeric; axis tick position; defaults to 0, in which case an
 #'  appropriate value is estimated.
+#'@param rotate_tick_label numeric; number of positions to move the tick label
+#'  (counter-clockwise); defaults to 0.
 #'@param dist_construct_label integer; position of the construct label relative
 #'  to the surrounding circle; defaults to 10, in which case an appropriate
 #'  value is estimated; a value of .5 would position the label halfway between
@@ -61,6 +74,8 @@
 #'  between tests as text.
 #'@param cor_labels_facets logical; if \code{TRUE}, shows the correlations
 #'  between facets as text.
+#'@param title character; overall chart title; defaults to NULL.
+#'@param size_title integer; title font size relative to default.
 #'@param size_construct_label integer; construct label font size relative to
 #'  default.
 #'@param size_test_labels integer; test label font size relative to default.
@@ -83,7 +98,15 @@
 #'@param size_xarrow_labels integer; font size of the correlations indicated by
 #'  extra arrows relative to default.
 #'
-#'@details To get tidy results, it is often required to use \code{rotate_} and
+#'@details To summarize center distances (\code{cd_method}), the "mean" method
+#'  computes the average center distance (compute cds first, summarize across
+#'  items second), while the "aggregate" method computes a center distance
+#'  based on the sum of the squared loadings (summarize across items first,
+#'  compute cds second). "Aggregate" (default) is recommended, because it is
+#'  more meaningful in cases with heterogeneous factor loadings, while "mean"
+#'  is the originally proposed method.
+#'
+#'  To get tidy results, it is often required to use \code{rotate_} and
 #'  \code{subrotate_} for better alignment.
 #'
 #'  If you set \code{subrotate_} to a single value, all nested facet charts will
@@ -104,6 +127,24 @@
 #'  formats use \code{file_width}, \code{file_height}, and \code{dpi} to avoid
 #'  later rescaling and loss of quality.
 #'
+#'  Instead of using screenshots to crop the chart, it is highly recommendable
+#'  to use \code{zoom_x} and \code{zoom_y}. This allows for vector-based
+#'  graphics quality when showing sections of the chart. With this cropping
+#'  method, use \code{file_width} to set the overall size of the file output,
+#'  \code{file_height} will automatically adjust to retain the correct aspect
+#'  ratio, if both \code{zoom_x} and \code{zoom_y} are provided.
+#'
+#'  If \code{facet1} or \code{facet2} is \code{NA} for a given xarrow, the arrow
+#'  will end on the test's circle. Note: this correlation is usually not part of
+#'  the model.
+#'
+#'  Consider adding title and caption in your typesetting software (LaTeX, MS
+#'  Word, ...), not here. The option to add a title is only a quick and dirty
+#'  shurtcut. It reduces chart size and is inflexible. Adding the title manually
+#'  will provide additional options, but requires you to save to a file
+#'  manually. To manually add a title or caption use
+#'  \code{\link[ggplot2]{labs}}.
+#'
 #'@return Object of the class "ggplot".
 #'
 #'@seealso \code{\link{item_chart}} \code{\link{facet_chart}}
@@ -114,18 +155,18 @@
 #'
 #' # adding xarrows, in this example for all cases where the correlation between
 #' # facets exceeds the correlation between their respective tests.
-#' sc_arrows <- data.frame(test1 = rep(NA, 3),
-#'                         facet1 = NA,
-#'                         test2 = NA,
-#'                         facet2 = NA,
-#'                         value = NA)
-#' sc_arrows[1, ] <- c("DSSEI", "Ab", "RSES", "Ps", ".67")
-#' sc_arrows[2, ] <- c("DSSEI", "Ab", "SMTQ", "Cs", ".81")
-#' sc_arrows[3, ] <- c("SMTQ", "Ct", "RSES", "Ns", ".76")
+#' x <- data.frame(
+#'   test1 = rep(NA, 3),
+#'   facet1 = NA,
+#'   test2 = NA,
+#'   facet2 = NA,
+#'   value = NA)
+#' x[1, ] <- c("DSSEI", "Ab", "RSES", "Ps", ".67")
+#' x[2, ] <- c("DSSEI", "Ab", "SMTQ", "Cs", ".81")
+#' x[3, ] <- c("SMTQ", "Ct", "RSES", "Ns", ".76")
 #' nested_chart(self_confidence,
 #'              subradius = .6,
-#'              xarrows = sc_arrows,
-#'              show_xarrows = TRUE)
+#'              xarrows = x)
 #'
 #' # rotating the nested facet charts one by one
 #' nested_chart(self_confidence,
@@ -134,22 +175,26 @@
 #'
 #' # test without facets
 #'
-#' global <- system.file("extdata", "IPV_global.xlsx", package = "IPV", mustWork = TRUE)
-#' tests <- c(system.file("extdata", "IPV_DSSEI.xlsx", package = "IPV", mustWork = TRUE),
-#'            system.file("extdata", "IPV_SMTQ.xlsx", package = "IPV", mustWork = TRUE),
-#'            NA)
+#' global <- system.file(
+#'   "extdata", "IPV_global.xlsx", package = "IPV", mustWork = TRUE)
+#' tests <- c(
+#'   system.file("extdata", "IPV_DSSEI.xlsx", package = "IPV", mustWork = TRUE),
+#'   system.file("extdata", "IPV_SMTQ.xlsx", package = "IPV", mustWork = TRUE),
+#'   NA)
 #' x <- input_excel(global = global, tests = tests)
 #' nested_chart(x)
 #'
 #'@export
 nested_chart <- function(
   data,
+  cd_method = "aggregate",
+  test_order = NULL,
+  facet_order = NULL,
   xarrows = NULL,
   subradius = 0,
   file_name = "none",
   size = 1,
   relative_scaling = 0,
-  show_xarrows = FALSE,
   font = "sans",
   rotate_radians = 0,
   rotate_degrees = 0,
@@ -157,12 +202,15 @@ nested_chart <- function(
   subrotate_degrees = 0,
   file_width = 10,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
-  color_global = "black",
-  color_nested = "black",
+  color_global = "#11C1FF",
+  color_nested = "#007AD6",
   fade = 85,
   cor_spacing = 0,
   tick = 0,
+  rotate_tick_label = 0,
   dist_construct_label = 10,
   rotate_construct_label_radians = 0,
   rotate_construct_label_degrees = 0,
@@ -171,6 +219,8 @@ nested_chart <- function(
   rotate_test_labels_degrees = 0,
   cor_labels_tests = TRUE,
   cor_labels_facets = TRUE,
+  title = NULL,
+  size_title = 1,
   size_construct_label = 1,
   size_test_labels = 1,
   size_facet_labels = 1,
@@ -189,8 +239,12 @@ nested_chart <- function(
 
   coord <- coord_nested(
     data = data,
+    cd_method = cd_method,
+    test_order = test_order,
+    facet_order = facet_order,
     subradius = subradius,
     tick = tick,
+    rotate_tick_label = rotate_tick_label,
     rotate_radians = rotate_radians,
     rotate_degrees = rotate_degrees,
     subrotate_radians = subrotate_radians,
@@ -211,6 +265,8 @@ nested_chart <- function(
     coord = coord,
     size = size,
     file_name = file_name,
+    zoom_x = zoom_x,
+    zoom_y = zoom_y,
     file_width = file_width,
     file_height = file_height,
     dpi = dpi,
@@ -220,7 +276,6 @@ nested_chart <- function(
     color_nested = color_nested,
     fade = fade,
     font = font,
-    show_xarrows = show_xarrows,
     size_construct_label = size_construct_label,
     size_test_labels = size_test_labels,
     size_facet_labels = size_facet_labels,
@@ -230,6 +285,8 @@ nested_chart <- function(
     width_circles_inner = width_circles_inner,
     width_tick = width_tick,
     width_tick_inner = width_tick_inner,
+    title = title,
+    size_title = size_title,
     size_tick_label = size_tick_label,
     size_cor_labels = size_cor_labels,
     size_cor_labels_inner = size_cor_labels_inner,
@@ -249,10 +306,20 @@ nested_chart <- function(
 #'
 #'@param data SEM estimates in the appropriate format, given by the input
 #'  functions.
+#'@param cd_method character; method to summarize center distances, either
+#'  "mean" or "aggregate", see details; defaults to "aggregate".
+#'@param test_order character; vector of test names in desired order
+#'  (counter-clockwise); defaults to NULL, in which case the order is based on
+#'  the correlation matrix columns in 'data'.
+#'@param facet_order character; vector of all facet names of all tests in
+#'  desired order (counter-clockwise); defaults to NULL, in which case the order
+#'  is based on the correlation matrix columns in 'data'.
 #'@param subradius integer; same unit as center distances; radius of the facet
 #'  circles; defaults to 0, in which case an appropriate value is estimated.
 #'@param tick numeric; axis tick position; defaults to 0, in which case an
 #'  appropriate value is estimated.
+#'@param rotate_tick_label numeric; number of positions to move the tick label
+#'  (counter-clockwise); defaults to 0.
 #'@param rotate_radians integer; radian angle to rotate the chart
 #'  counter-clockwise by; use fractions of pi (e.g. pi/2 = 90 degrees).
 #'@param rotate_degrees integer; angle in degrees to rotate the chart
@@ -301,8 +368,12 @@ nested_chart <- function(
 #'@seealso \code{\link{plot_nested}} \code{\link{nested_chart}}
 coord_nested <- function (
   data,
+  cd_method = "aggregate",
+  test_order = NULL,
+  facet_order = NULL,
   subradius = 0,
   tick = 0,
+  rotate_tick_label = 0,
   rotate_radians = 0,
   rotate_degrees = 0,
   subrotate_radians = 0,
@@ -323,6 +394,7 @@ coord_nested <- function (
   # helper variables -----------------------------------------------------------
 
   cplx <- length(colnames(data$g$cors))
+
   # a vector of subrotation values can be given,
   # to allign the nested facet charts
   subrotate <- subrotate_radians + subrotate_degrees * pi / 180
@@ -339,13 +411,16 @@ coord_nested <- function (
   # default subradius needs to scale with the data to avoid messy results
   def_subradius <- function (data) {
     cplx <- length(colnames(data$cors))
-    mcd <- data$cds$mean_cd
+    if (cd_method == "aggregate") mcd <- data$cds$aggregate_cd
+    if (cd_method == "mean") mcd <- data$cds$mean_cd
     subradius <- max(mean(mcd), .25 * max(mcd)) *
       (5 / (3 + cplx)) *
       (.25 + .25 * (min(max(mean(mcd), .25 * max(mcd)) / stats::sd(mcd), 3)))
   }
   if (subradius == 0) {
-    subradius <- min(unlist(lapply(data$tests[!is.na(data$tests)], def_subradius)))
+    subradius <- min(unlist(lapply(
+      data$tests[!is.na(data$tests)],
+      def_subradius)))
     message(paste("Facet circle radius set to ",
                   signif(subradius, digits = 3),
                   " based on the data.",
@@ -355,12 +430,15 @@ coord_nested <- function (
   # nested facet charts --------------------------------------------------------
 
   factorcoords <- list()
-  for (i in 1:length(data$tests)) {
-    factorcoords[[i]] <- coord_facets(data$tests[[i]],
-                                      subradius = subradius,
-                                      rotate_radians = subrotate[i],
-                                      rotate_test_label_radians = rotate_test_labels[i],
-                                      dist_test_label = dist_test_labels[i])
+  for (i in seq_along(data$tests)) {
+    factorcoords[[i]] <- suppressMessages(coord_facets(
+      data$tests[[i]],
+      cd_method = cd_method,
+      facet_order = facet_order,
+      subradius = subradius,
+      rotate_radians = subrotate[i],
+      rotate_test_label_radians = rotate_test_labels[i],
+      dist_test_label = dist_test_labels[i]))
     if (is.na(factorcoords[[i]][["p_axes"]][1,"rho0"])) {
       x <- names(data$tests)[i]
       row.names(factorcoords[[i]][["p_circs"]]) <- x
@@ -383,7 +461,10 @@ coord_nested <- function (
 
   # helper variables -----------------------------------------------------------
 
-  nam <- colnames(data$g$cors)
+  if (is.null(test_order)) {
+    test_order <- colnames(data$g$cors)
+  }
+  nam <- test_order
   rotate <- rotate_radians + rotate_degrees * pi / 180
   rotate_construct_label <- rotate_construct_label_radians +
     rotate_construct_label_degrees * pi / 180
@@ -403,8 +484,15 @@ coord_nested <- function (
   }
   circsize <- circsize + correlations * cor_spacing
 
-  g_cds <- data.frame(lapply(split(data$g$cds, data$g$cds$subfactor),
-                             function (x) y <- x$mean_cd[1]))
+  if (cd_method == "aggregate") {
+    g_cds <- data.frame(lapply(split(data$g$cds, data$g$cds$subfactor),
+                               function (x) y <- x$aggregate_cd[1]))
+  }
+  if (cd_method == "mean") {
+    g_cds <- data.frame(lapply(split(data$g$cds, data$g$cds$subfactor),
+                               function (x) y <- x$mean_cd[1]))
+  }
+
   g_cds <- t(g_cds)
   g_cds <- data.frame(g_cds)
 
@@ -420,10 +508,12 @@ coord_nested <- function (
 
   # default axis tick also scales with the data, selected from a set of possible
   # ticks to avoid odd values
+  if (cd_method == "aggregate") tot_cd <- data$g$cds$aggregate_cd
+  if (cd_method == "mean") tot_cd <- data$g$cds$mean_cd
   if (tick == 0){
     tick <- signif(
-      max(.15 * max(data$g$cds$mean_cd),
-          .3 * min(data$g$cds$mean_cd)) *
+      max(.15 * max(tot_cd),
+          .3 * min(tot_cd)) *
         rs ^ .25,
       1)
     if (rs < 3 * (cplx + 3) / 200){
@@ -475,10 +565,11 @@ coord_nested <- function (
   row.names(c_circs)[1] <- ""
 
   # add rings for correlation values, so they have enough space to be displayed
-  if(correlations == T) {
-    p_ring <- data.frame(phi = rep(NA, cplx + 1),
-                         rho = NA,
-                         radius = NA)
+  if(correlations == TRUE) {
+    p_ring <- data.frame(
+      phi = rep(NA, cplx + 1),
+      rho = NA,
+      radius = NA)
     row.names(p_ring) <- c(levels(data$g$cds$factor), nam)
     p_ring[names(circsize), "radius"] <- circsize - correlations * cor_spacing
     p_ring[nam, "rho"] <- c(g_cds[nam, ] * rs + circsize[nam])
@@ -497,11 +588,12 @@ coord_nested <- function (
 
   ## axes ---------------------------
 
-  p_axes <- data.frame(rho0 = rep(0, cplx),
-                       rho1 = NA,
-                       rho2 = NA,
-                       rho3 = NA,
-                       phi = NA)
+  p_axes <- data.frame(
+    rho0 = rep(0, cplx),
+    rho1 = NA,
+    rho2 = NA,
+    rho3 = NA,
+    phi = NA)
   row.names(p_axes) <- nam
   p_axes$phi <- utils::tail(p_circs$phi, cplx)
   p_axes$rho1 <- utils::tail(p_circs$rho, cplx) -
@@ -509,10 +601,11 @@ coord_nested <- function (
   p_axes$rho2 <- p_axes$rho1 + 2 * utils::tail(p_circs$radius, cplx)
   p_axes$rho3 <- rep(p_circs$radius[1])
 
-  c_axes <- data.frame(x0 = rep(NA, cplx), y0 = NA,
-                       x1 = NA, y1 = NA,
-                       x2 = NA, y2 = NA,
-                       x3 = NA, y3 = NA)
+  c_axes <- data.frame(
+    x0 = rep(NA, cplx), y0 = NA,
+    x1 = NA, y1 = NA,
+    x2 = NA, y2 = NA,
+    x3 = NA, y3 = NA)
   row.names(c_axes) <- nam
   c_axes$x0 <- round(cos(p_axes$phi) * p_axes$rho0, digits = 7)
   c_axes$x1 <- round(cos(p_axes$phi) * p_axes$rho1, digits = 7)
@@ -524,7 +617,7 @@ coord_nested <- function (
   c_axes$y3 <- round(sin(p_axes$phi) * p_axes$rho3, digits = 7)
 
   axis_tick <- data.frame(tick = tick, rho = tick, phi = NA, x = NA, y = NA)
-  axis_tick$phi <- min(p_circs$phi) + pi / cplx
+  axis_tick$phi <- min(p_circs$phi) + (pi + 2 * pi * rotate_tick_label) / cplx
   axis_tick$x <- round(cos(axis_tick$phi) *
                          max(axis_tick$rho, .1 * max(g_cds)),
                        digits = 7)
@@ -546,8 +639,10 @@ coord_nested <- function (
   construct_label$phi <- p_circs[which.min(p_circs$radius), "phi"] +
     pi / cplx + rotate_construct_label
   construct_label$rho <- dist_construct_label * max(p_circs$radius)
-  construct_label$x <- round(cos(construct_label$phi) * construct_label$rho, digits = 7)
-  construct_label$y <- round(sin(construct_label$phi) * construct_label$rho, digits = 7)
+  construct_label$x <- round(
+    cos(construct_label$phi) * construct_label$rho, digits = 7)
+  construct_label$y <- round(
+    sin(construct_label$phi) * construct_label$rho, digits = 7)
 
 
   ## correlations -------------------
@@ -561,7 +656,7 @@ coord_nested <- function (
                      xnew = NA,
                      ynew = NA)
 
-  a <- row.names(data$g$cors)
+  a <- nam
   a <- c(a, a[1])
   b <- NULL
   for (k in 1:cplx) {
@@ -570,14 +665,17 @@ coord_nested <- function (
     a <- c(a, a[1])
   }
   cors$V1 <- b
-  cors$V2 <- unlist(lapply(row.names(data$g$cors), rep, times = cplx - 1))
+  cors$V2 <- unlist(lapply(nam, rep, times = cplx - 1))
 
   for (k in 1:n) {
     cors$label[k] <- data$g$cors[cors$V1[k], cors$V2[k]]
   }
   cors$label <- as.character(cors$label)
   # exclude leading 0's for aesthetic reasons
-  cors$label[cors$label != 1 & cors$label != 0] <- substr(cors$label, 2, 4)
+  cors$label[cors$label < 0] <-
+    paste("-", substr(cors$label[cors$label < 0], 3, 5), sep = "")
+  cors$label[cors$label != 1 & cors$label > 0] <-
+    substr(cors$label[cors$label != 1 & cors$label > 0], 2, 4)
 
   cors$x <- c_circs[cors$V2, "x"]
   cors$y <- c_circs[cors$V2, "y"]
@@ -688,7 +786,8 @@ coord_nested <- function (
                          xlabel = NA,
                          ylabel = NA)
     arrows$label <- xarrows$value
-    # note: facet circles are named as 'factor.facet' within nested$circles
+    # facet circles are named as 'test.facet' within nested$circles
+    # arrow ends on facets
     arrows$x1 <- nested$circles[paste(xarrows$test1,
                                       xarrows$facet1,
                                       sep = "."),
@@ -705,6 +804,16 @@ coord_nested <- function (
                                       xarrows$facet2,
                                       sep = "."),
                                 "y"]
+
+    # arrow ends on tests
+    arrows[is.na(xarrows$facet1), c("x1", "y1")] <-
+      c_circs[
+        xarrows[is.na(xarrows$facet1),"test1"],
+        c("x", "y")]
+    arrows[is.na(xarrows$facet2), c("x2", "y2")] <-
+      c_circs[
+        xarrows[is.na(xarrows$facet2),"test2"],
+        c("x", "y")]
 
 
     ## labels -----------------------
@@ -762,16 +871,27 @@ coord_nested <- function (
 
     ## arrows again -----------------
 
-    arrows$x1new <- arrows$x1 + subradius / dist_small * xdist_small
-    arrows$x2new <- arrows$x2 + subradius / dist_small * -xdist_small
-    arrows$y1new <- arrows$y1 + subradius / dist_small * ydist_small
-    arrows$y2new <- arrows$y2 + subradius / dist_small * -ydist_small
+    arrows$radius1 <- subradius
+    arrows$radius2 <- subradius
+
+    # overwrite in case of arrows ending in test (instead of facet)
+    arrows[is.na(xarrows$facet1), "radius1"] <-
+      c_circs[xarrows[is.na(xarrows$facet1), "test1"],
+              "radius"]
+    arrows[is.na(xarrows$facet2), "radius2"] <-
+      c_circs[xarrows[is.na(xarrows$facet2), "test2"],
+              "radius"]
+
+    arrows$x1new <- arrows$x1 + arrows$radius1 / dist_small * xdist_small
+    arrows$x2new <- arrows$x2 + arrows$radius2 / dist_small * -xdist_small
+    arrows$y1new <- arrows$y1 + arrows$radius1 / dist_small * ydist_small
+    arrows$y2new <- arrows$y2 + arrows$radius2 / dist_small * -ydist_small
     arrows$x1 <- arrows$x1new
     arrows$x2 <- arrows$x2new
     arrows$y1 <- arrows$y1new
     arrows$y2 <- arrows$y2new
 
-    arrows[8:11] <- list(NULL)
+    arrows[8:13] <- list(NULL)
     rm(n)
   } else arrows <- NULL
 
@@ -794,8 +914,9 @@ coord_nested <- function (
                  cor_spacing     = cor_spacing,
                  arrows          = arrows)
   coord <- list(factor = factorcoords,
-                global = global)
-  # if (prepare_item_charts == T) coord$items <- itemcoords
+                global = global,
+                rs = rs)
+  # if (prepare_item_charts == TRUE) coord$items <- itemcoords
 
   return(coord)
 }
@@ -810,7 +931,12 @@ coord_nested <- function (
 #'@param coord list generated by \code{\link{coord_nested}}.
 #'@param size integer; changes the size of most chart objects simultaneously.
 #'@param file_name character; name of the file to save. Supported formats are:
-#'  "pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".
+#'  "pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+#'  "none".
+#'@param zoom_x integer; vector with two values, the edges of the zoomed section
+#'  on the x-axis; defaults to NULL.
+#'@param zoom_y integer; vector with two values, the edges of the zoomed section
+#'  on the y-axis; defaults to NULL.
 #'@param file_width integer; file width in inches; defaults to 10.
 #'@param file_height integer; file height in inches; defaults to 10.
 #'@param dpi integer; resolution in dots per inch for "png" and "jpeg" files;
@@ -823,8 +949,6 @@ coord_nested <- function (
 #'@param color_nested nested accent color; defaults to "black".
 #'@param fade integer; brightness of the gray tones between 0 (black) and 100
 #'  (white) in steps of 1; defaults to 85.
-#'@param show_xarrows logical; if \code{TRUE}, shows correlation arrows between
-#'  facets of different tests, according to xarrows.
 #'@param font character; text font, use extrafonts to access additional fonts;
 #'  defaults to "sans", which is "Helvetica".
 #'@param size_construct_label integer; construct label font size relative to
@@ -839,6 +963,8 @@ coord_nested <- function (
 #'@param width_tick integer; global axis tick line width relative to default.
 #'@param width_tick_inner integer; nested axis tick line width relative to
 #'  default.
+#'@param title character; overall chart title; defaults to NULL.
+#'@param size_title integer; title font size relative to default.
 #'@param size_tick_label integer; axis tick label font size relative to default.
 #'@param size_cor_labels integer; font size of the correlations between tests
 #'  relative to default.
@@ -861,6 +987,8 @@ plot_nested <- function (
   file_name = "none",
   file_width = 10,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
   cor_labels_tests = TRUE,
   cor_labels_facets = TRUE,
@@ -868,7 +996,6 @@ plot_nested <- function (
   color_nested = "black",
   fade = 85,
   font = "sans",
-  show_xarrows = FALSE,
   size_construct_label = 1,
   size_test_labels = 1,
   size_facet_labels = 1,
@@ -878,6 +1005,8 @@ plot_nested <- function (
   width_circles_inner = 1,
   width_tick = 1,
   width_tick_inner = 1,
+  title = NULL,
+  size_title = 1,
   size_tick_label = 1,
   size_cor_labels = 1,
   size_cor_labels_inner = 1,
@@ -896,7 +1025,9 @@ plot_nested <- function (
   } else cors_inner <- NULL
 
   # delete empty elements
-  facetless <- c("pLaCeHoLdEr", row.names(coord$g$nested$axes)[is.na(coord$g$nested$axes$x0)])
+  facetless <- c(
+    "pLaCeHoLdEr",
+    row.names(coord$g$nested$axes)[is.na(coord$g$nested$axes$x0)])
   has_facets <- setdiff(names(coord$factor), facetless)
   coord$global$nested$cors <-
     coord$g$n$cors[which(!row.names(coord$g$n$cors) == facetless), ]
@@ -907,9 +1038,24 @@ plot_nested <- function (
   # some calculations are not possible within aes_string(), so aesthetics are
   # prepared here
   tick <- coord$g$axis_tick$tick
-  tick_label_x <- 1.3 * coord$g$rs * coord$g$axis_tick$x
-  tick_label_y <- 1.3 * coord$g$rs * coord$g$axis_tick$y
+  tick_label_x <- coord$g$rs * coord$g$axis_tick$x +
+    0.03 * size * size_tick_label *
+    cos(coord$g$axis_tick$phi) * coord$g$p_circs[1, "radius"]
+  tick_label_y <- coord$g$rs * coord$g$axis_tick$y +
+    0.03 * size * size_tick_label *
+    sin(coord$g$axis_tick$phi) * coord$g$p_circs[1, "radius"]
+
   tick_label_label <- as.character(formatC(tick, format = "fg"))
+
+  # aspect ratio correction (to manage zoomed cases)
+  if(!is.null(zoom_x) & !is.null(zoom_y)) {
+    asp <- diff(zoom_y) / diff(zoom_x)
+    file_height <- asp * file_width
+  }
+
+  # scale zoom_x and zoom_y properly (messed up by relative_scaling)
+  if (!is.null(zoom_x)) zoom_x <-  zoom_x * coord$rs
+  if (!is.null(zoom_y)) zoom_y <-  zoom_y * coord$rs
 
 
   # chart ----------------------------------------------------------------------
@@ -934,7 +1080,11 @@ plot_nested <- function (
       panel.grid.minor = ggplot2::element_blank(),
       plot.background  = ggplot2::element_blank(),
       text             = ggplot2::element_text(size = 16, family = font),
-      plot.margin      = ggplot2::margin(0, 0, 0, 0, "in")) +
+      plot.margin      = ggplot2::margin(0, 0, 0, 0, "in"),
+      plot.title       = ggplot2::element_text(
+        hjust = .5,
+        vjust = -3,
+        size = 16 * size * size_title)) +
     ggplot2::aes() +
 
 
@@ -958,6 +1108,14 @@ plot_nested <- function (
       linetype = "dotted",
       size = .5 * min(size, 1) * width_tick) +
 
+    # test circle background
+    ggforce::geom_circle(
+      data = coord$g$c_circs[-1, ],
+      ggplot2::aes_string(x0 = "x", y0 = "y", r = "radius"),
+      size = .5 * size * width_circles,
+      color = color_global,
+      fill = "white") +
+
     # global outer axis segments
     ggplot2::geom_segment(
       data = coord$g$c_axes,
@@ -975,7 +1133,7 @@ plot_nested <- function (
     # global center dot
     ggplot2::geom_point(
       ggplot2::aes(x = 0, y = 0),
-      size = 3 * size * width_axes) +
+      size = 2 * size * width_axes) +
 
     # nested outer axis segments
     ggplot2::geom_segment(
@@ -988,13 +1146,13 @@ plot_nested <- function (
     ggplot2::geom_point(
       data = coord$g$c_circs[has_facets, ],
       ggplot2::aes_string(x = "x", y = "y"),
-      size = 1.5 * size * width_axes_inner) +
+      size = 1 * size * width_axes_inner) +
 
     # test circles
     ggforce::geom_circle(
       data = coord$g$c_circs[-1, ],
       ggplot2::aes_string(x0 = "x", y0 = "y", r = "radius"),
-      size = .5 * size * width_circles,
+      size = .6 * size * width_circles,
       color = color_global) +
 
     # nested tick
@@ -1004,18 +1162,26 @@ plot_nested <- function (
       size = .5 * min(size, .5) * width_tick_inner,
       linetype = "dotted") +
 
+    # facet circle background
+    ggforce::geom_circle(
+      data = coord$g$nested$circles,
+      ggplot2::aes_string(x0 = "x", y0 = "y", r = "radius"),
+      size = .3 * size * width_circles_inner,
+      color = color_nested,
+      fill = "white") +
+
     # global inner axis segments
     ggplot2::geom_segment(
       data = coord$g$c_axes,
       ggplot2::aes_string(x = "x0", y = "y0", xend = "x1", yend = "y1"),
-      size = 2 * size * width_axes,
-      color = color_global) +
+      size = 1.5 * size * width_axes,
+      color = "black") +
 
     # facet circles
     ggforce::geom_circle(
       data = coord$g$nested$circles,
       ggplot2::aes_string(x0 = "x", y0 = "y", r = "radius"),
-      size = .25 * size * width_circles_inner,
+      size = .3 * size * width_circles_inner,
       color = color_nested) +
 
     # facet labels
@@ -1029,26 +1195,26 @@ plot_nested <- function (
     ggplot2::geom_segment(
       data = coord$g$nested$axes,
       ggplot2::aes_string(x = "x0", y = "y0", xend = "x1", yend = "y1"),
-      size = 1 * size * width_axes_inner,
-      color = color_nested) +
+      size = .75 * size * width_axes_inner,
+      color = "black") +
 
     # construct label
     ggplot2::geom_text(
       data = coord$g$construct_label,
       ggplot2::aes_string(x = "x", y = "y", label = "label"),
       family = font,
-      size = 6 * size * size_construct_label,
+      size = 5 * size * size_construct_label,
       fontface = "bold",
-      color = color_global) +
+      color = "black") +
 
     # test labels
     ggplot2::geom_text(
       data = coord$g$nested$test_label,
       ggplot2::aes_string(x = "x", y = "y", label = "label"),
       family = font,
-      size = 4 * size * size_test_labels,
+      size = 3.5 * size * size_test_labels,
       fontface = "bold",
-      color = color_nested)
+      color = "black")
 
 
   ## optional layers ----------------
@@ -1068,13 +1234,15 @@ plot_nested <- function (
 
     # rings
     # c() enables putting layer on the bottom, by listing the layer first
-    myipv$layers <- c(
+    myipv$layers <- append(
+      myipv$layers,
       ggforce::geom_circle(
         data = coord$g$c_ring,
         ggplot2::aes_string(x0 = "x", y0 = "y", r = "radius"),
         size = .25 * size * width_axes_inner,
         color = paste("gray", fade, sep = "")),
-      myipv$layers)
+      after = 3
+      )
 
     # labels
     myipv <-  myipv +
@@ -1087,7 +1255,7 @@ plot_nested <- function (
   }
 
   # extra arrows
-  if (show_xarrows == TRUE) {
+  if (!is.null(coord$global$arrows)) {
     myipv <- myipv +
 
       # arrows
@@ -1110,6 +1278,29 @@ plot_nested <- function (
         size = 2.25 * size * size_xarrow_labels,
         family = font,
         color = "gray20")
+  }
+
+  # title
+  if (!is.null(title)) {
+    myipv <- myipv +
+      ggplot2::ggtitle(label = title)
+  }
+
+  # section
+  if (!is.null(c(zoom_x, zoom_y))) {
+    myipv <- myipv +
+      ggplot2::coord_cartesian(
+        xlim = zoom_x,
+        ylim = zoom_y,
+        expand = FALSE)
+    if(!is.null(zoom_x) & !is.null(zoom_y) & file_name != "none") {
+      message(paste(
+        "file_height was set to ",
+        signif(asp, 4),
+        " times the file_width, to retain the aspect ratio.",
+        sep = ""))
+    }
+
   }
 
 

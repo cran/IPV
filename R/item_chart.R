@@ -4,8 +4,12 @@
 #'
 #' @param data SEM estimates in the appropriate format, given by the input
 #'   functions.
+#' @param facet_order character; vector of facet names in desired order
+#'   (counter-clockwise); defaults to NULL, in which case the order is based on
+#'   the correlation matrix columns in 'data'.
 #' @param file_name character; name of the file to save. Supported formats are:
-#'   "pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".
+#'   "pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+#'   "none".
 #' @param size integer; changes the size of most chart objects simultaneously.
 #' @param font character; text font, use extrafonts to access additional fonts;
 #'   defaults to "sans", which is "Helvetica".
@@ -13,6 +17,12 @@
 #'   counter-clockwise by; use fractions of pi (e.g. pi/2 = 90 degrees).
 #' @param rotate_degrees integer; angle in degrees to rotate the chart
 #'   counter-clockwise by.
+#' @param grid_limit integer; upper limit to which the grid lines should be
+#'   drawn; defaults to 0, in which case an appropriate value is estimated.
+#' @param zoom_x integer; vector with two values, the edges of the zoomed
+#'   section on the x-axis; defaults to NULL.
+#' @param zoom_y integer; vector with two values, the edges of the zoomed
+#'   section on the y-axis; defaults to NULL.
 #' @param file_width integer; file width in inches; defaults to 12.
 #' @param file_height integer; file height in inches; defaults to 10.
 #' @param dpi integer; resolution in dots per inch for "png" and "jpeg" files;
@@ -37,6 +47,8 @@
 #' @param width_items integer; item bar width relative to default.
 #' @param length_items integer; item bar length relative to default.
 #' @param length_ratio_items integer; relative item bar length; defaults to 1.5.
+#' @param title character; overall chart title; defaults to NULL.
+#' @param size_title integer; title font size relative to default.
 #' @param size_test_label integer; test label font size relative to default.
 #' @param size_facet_labels integer; facet label font size relative to default.
 #' @param width_axes integer; radial axis width relative to default.
@@ -60,6 +72,23 @@
 #'   formats use \code{file_width}, \code{file_height}, and \code{dpi} to avoid
 #'   later rescaling and loss of quality.
 #'
+#'   Instead of using screenshots to crop the chart, it is highly recommendable
+#'   to use \code{zoom_x} and \code{zoom_y}. This allows for vector-based
+#'   graphics quality when showing sections of the chart. With this cropping
+#'   method, use \code{file_width} to set the overall size of the file output,
+#'   \code{file_height} will automatically adjust to retain the correct aspect
+#'   ratio, if both \code{zoom_x} and \code{zoom_y} are provided.
+#'
+#'   Consider adding title and caption in your typesetting software (LaTeX, MS
+#'   Word, ...), not here. The option to add a title is only a quick and dirty
+#'   shurtcut. It reduces chart size and is inflexible. Adding the title
+#'   manually will provide additional options, but requires you to save to a
+#'   file manually. To manually add a title or caption use
+#'   \code{\link[ggplot2]{labs}}.
+#'
+#'   Using a \code{grid_limit} higher than the default will re-scale the whole
+#'   chart, while a value below the default will only remove grid lines.
+#'
 #' @seealso \code{\link{facet_chart}} \code{\link{nested_chart}}
 #'
 #' @examples
@@ -69,13 +98,17 @@
 #' @export
 item_chart <- function(
   data,
+  facet_order = NULL,
   file_name = "none",
   size = 1,
   font = "sans",
   rotate_radians = 0,
   rotate_degrees = 0,
+  grid_limit = 0,
   file_width = 12,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
   color = "black",
   color2 = "black",
@@ -89,6 +122,8 @@ item_chart <- function(
   width_items = 1,
   length_items = 1,
   length_ratio_items = 1.5,
+  title = NULL,
+  size_title = 1,
   size_tick_label = 1,
   size_test_label = 1,
   size_facet_labels = 1,
@@ -98,8 +133,10 @@ item_chart <- function(
 
   coord <- coord_items(
     data = data,
+    facet_order = facet_order,
     rotate_radians = rotate_radians,
     rotate_degrees = rotate_degrees,
+    grid_limit = grid_limit,
     dodge = dodge,
     width_items = width_items,
     length_items = length_items,
@@ -114,6 +151,8 @@ item_chart <- function(
     file_name = file_name,
     file_width = file_width,
     file_height = file_height,
+    zoom_x = zoom_x,
+    zoom_y = zoom_y,
     dpi = dpi,
     color = color,
     color2 = color2,
@@ -121,6 +160,8 @@ item_chart <- function(
     fade_grid_major = fade_grid_major,
     fade_grid_minor = fade_grid_minor,
     font = font,
+    title = title,
+    size_title = size_title,
     size_tick_label = size_tick_label,
     size_test_label = size_test_label,
     size_facet_labels = size_facet_labels,
@@ -142,7 +183,12 @@ item_chart <- function(
 #'   \code{\link{coord_nested}}.
 #' @param size integer; changes the size of most chart objects simultaneously.
 #' @param file_name character; name of the file to save. Supported formats are:
-#'   "pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to "none".
+#'   "pdf" (highest quality and smallest file size), "png", "jpeg"; defaults to
+#'   "none".
+#' @param zoom_x integer; vector with two values, the edges of the zoomed
+#'   section on the x-axis; defaults to NULL.
+#' @param zoom_y integer; vector with two values, the edges of the zoomed
+#'   section on the y-axis; defaults to NULL.
 #' @param file_width integer; file width in inches; defaults to 12.
 #' @param file_height integer; file height in inches; defaults to 10.
 #' @param dpi integer; resolution in dots per inch for "png" and "jpeg" files;
@@ -157,6 +203,8 @@ item_chart <- function(
 #'   lines between 0 = "black" and 100 = "white" in steps of 1; defaults to 15.
 #' @param fade_grid_minor integer; brightness of the gray tone of the minor grid
 #'   lines between 0 = "black" and 100 = "white" in steps of 1; defaults to 65.
+#' @param title character; overall chart title; defaults to NULL.
+#' @param size_title integer; title font size relative to default.
 #' @param size_test_label integer; test font size relative to default.
 #' @param size_facet_labels integer; facet font size relative to default.
 #' @param width_axes integer; radial axis width relative to default.
@@ -177,6 +225,8 @@ plot_items <- function (
   file_name = "none",
   file_width = 12,
   file_height = 10,
+  zoom_x = NULL,
+  zoom_y = NULL,
   dpi = 500,
   color = "black",
   color2 = "black",
@@ -184,6 +234,8 @@ plot_items <- function (
   fade_grid_major = 15,
   fade_grid_minor = 65,
   font = "sans",
+  title = NULL,
+  size_title = 1,
   size_tick_label = 1,
   size_test_label = 1,
   size_facet_labels = 1,
@@ -198,6 +250,12 @@ plot_items <- function (
   # some calculations are not possible within aes_string(), so aesthetics are
   # prepared here
   axis_labels <- row.names(coord$c_axes)
+
+  # aspect ratio correction (to manage zoomed cases)
+  if(!is.null(zoom_x) & !is.null(zoom_y)) {
+    asp <- diff(zoom_y) / diff(zoom_x)
+    file_height <- asp * file_width
+  }
 
 
   # chart ----------------------------------------------------------------------
@@ -222,7 +280,11 @@ plot_items <- function (
       panel.grid.minor = ggplot2::element_blank(),
       plot.background  = ggplot2::element_blank(),
       text             = ggplot2::element_text(size = 16, family = font),
-      plot.margin      = ggplot2::margin(0, 0, 0, 0, "in")) +
+      plot.margin      = ggplot2::margin(0, 0, 0, 0, "in"),
+      plot.title       = ggplot2::element_text(
+        hjust = .5,
+        vjust = -3,
+        size = 16 * size * size_title)) +
     ggplot2::aes() +
 
 
@@ -301,6 +363,29 @@ plot_items <- function (
       family = font,
       size = 4 * size * size_tick_label,
       color = "gray20")
+
+
+  ## optional layers ----------------
+
+  # title
+  if (!is.null(title)) {
+    myipv <- myipv +
+      ggplot2::ggtitle(label = title)
+  }
+
+  # section
+  if (!is.null(c(zoom_x, zoom_y))) {
+    myipv <- myipv +
+      ggplot2::coord_cartesian(xlim = zoom_x, ylim = zoom_y, expand = FALSE)
+    if(!is.null(zoom_x) & !is.null(zoom_y) & file_name != "none") {
+      message(paste(
+        "file_height was set to ",
+        signif(asp, 4),
+        " times the file_width, to retain the aspect ratio.",
+        sep = ""))
+    }
+
+  }
 
 
   # optional file save ---------------------------------------------------------
