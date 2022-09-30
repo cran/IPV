@@ -9,7 +9,15 @@ knitr::opts_chunk$set(
 ## ---- eval = FALSE------------------------------------------------------------
 #  mydata <- HEXACO[ ,c(2:41, 122:161)] # (1.) HEXACO is a data frame containing raw data
 #  res <- ipv_est(mydata, name = "HA") # (2.) produce a formatted bundle of estimates to use
-#  nested_chart(res$est, file_name = "test.pdf") # (3.) create a chart with default formatting
+#  nested_chart(res, file_name = "test.pdf") # (3.) create a chart with default formatting
+
+## ---- echo = FALSE------------------------------------------------------------
+HEXACO_long <- reshape2::melt(cbind(id = row.names(HEXACO), HEXACO[ ,1:240]), id.vars = "id")
+HEXACO_long$test <- substr(HEXACO_long$variable, 1, 1)
+HEXACO_long$facet <- substr(HEXACO_long$variable, 3, 6)
+HEXACO_long$item <- substr(HEXACO_long$variable, 8, 13)
+HEXACO_long$variable <- NULL
+head(HEXACO_long)
 
 ## ---- echo = FALSE------------------------------------------------------------
 HEXACO[1:3, 2:4]
@@ -22,36 +30,60 @@ HEXACO[1:3, 2:4]
 #  res_A <- ipv_est(dat = HEXACO[ ,c(122:161)], name = "A")
 
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
-mychart <- item_chart(data = DSSEI)
+mychart <- item_chart(data = self_confidence)
 mychart
 
 ## ---- eval = FALSE------------------------------------------------------------
-#  mychart <- item_chart(data = DSSEI, file_name = "DSSEI_item_chart.pdf")
+#  mychart <- item_chart(data = self_confidence, test = "DSSEI", file_name = "DSSEI_item_chart.pdf")
 
 ## ---- eval = FALSE------------------------------------------------------------
-#  item_chart(DSSEI, facet_order = c("Ab", "So", "Ph", "Pb"))
+#  item_chart(self_confidence, test = "DSSEI", facet_order = c("Ab", "So", "Ph", "Pb"))
+
+## -----------------------------------------------------------------------------
+library(ggplot2)
+library(cowplot)
+x <- facet_chart(self_confidence) +
+  coord_fixed(
+    ratio = 1,
+    ylim = c(-3, 3),
+    xlim = c(-3, 3))
+y <- facet_chart(self_confidence, test = "RSES") +
+  coord_fixed(
+    ratio = 1,
+    ylim = c(-3, 3),
+    xlim = c(-3, 3))
+
+
+## ---- eval = FALSE------------------------------------------------------------
+#  # Save just as any other ggplot
+#  ggsave(filename = "test.pdf",
+#         plot = plot_grid(plotlist = list(x, y), align = "h"),
+#         width = 20, height = 10) # defaults are optimized for 10x10 inches per chart
 
 ## ---- eval=FALSE, fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
 #  mychart <- item_chart(
-#    data = DSSEI,
+#    data = self_confidence, test = "DSSEI",
 #    color = "darkblue", color2 = "darkred")
 #  mychart
 
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", fig.show='hold', dev='png'----
-x <- DSSEI
-x <- rename(x, "So", "verylongname")
-mychart1 <- item_chart(data = x)
-mychart2 <- item_chart(data = x, dodge = 7)
+x <- self_confidence
+x <- relabel(x, "So", "verylongname")
+mychart1 <- item_chart(data = x, test = "DSSEI")
+mychart2 <- item_chart(data = x, test = "DSSEI", dodge = 7)
 mychart1
 mychart2
 
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
-mychart <- facet_chart(data = DSSEI)
+mychart <- facet_chart(data = self_confidence, test = "DSSEI")
 mychart
 
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
-mychart <- facet_chart(data = DSSEI,
-                      cor_labels = FALSE)
+mychart <- facet_chart(
+  data = self_confidence,
+  test = "DSSEI",
+  cor_labels = FALSE,
+  size_marker = 0)
 mychart
 
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
@@ -65,41 +97,41 @@ nested_chart(self_confidence, relative_scaling = 1, tick = 0.2, rotate_tick_labe
 nested_chart(self_confidence, relative_scaling = 2, tick = 0.2, rotate_tick_label = -.2)
 
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
-mychart <- nested_chart(data = self_confidence,
-                        subradius = .5, size_facet_labels = 2, size_cor_labels_inner = 1.5)
-mychart
-
-## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
-x <- data.frame(
-  test1 = rep(NA, 3), facet1 = NA,
-  test2 = NA, facet2 = NA,
-  value = NA)
-x[1, ] <- c("DSSEI", "Ab", "RSES", "Ps", ".67") # first arrow
-x[2, ] <- c("DSSEI", "Ab", "SMTQ", "Cs", ".81") # second arrow
-x[3, ] <- c("SMTQ", "Ct", "RSES", "Ns", ".76") # third arrow
-x
-
 mychart <- nested_chart(
   data = self_confidence,
-  subradius = .5, size_facet_labels = 2, size_cor_labels_inner = 1.5,
-  xarrows = x)
+  subradius = .5,
+  size_facet_labels = 2,
+  size_cor_labels_inner = 1.5)
 mychart
 
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
 mychart <- nested_chart(
   data = self_confidence,
-  subradius = .5, size_facet_labels = 2, size_cor_labels_inner = 1.5,
-  xarrows = x,
-  subrotate_degrees = c(180, 270, 90), dist_construct_label = .7,
+  subradius = .5,
+  size_facet_labels = 2,
+  size_cor_labels_inner = 1.5,
+  xarrows = FALSE)
+mychart
+
+## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
+mychart <- nested_chart(
+  data = self_confidence,
+  subradius = .5,
+  size_facet_labels = 2,
+  size_cor_labels_inner = 1.5,
+  subrotate_degrees = c(180, 270, 90),
+  dist_construct_label = .7,
   rotate_test_labels_degrees = c(0, 120, 0))
 mychart
 
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
 mychart <- nested_chart(
   data = self_confidence,
-  subradius = .5, size_facet_labels = 2, size_cor_labels_inner = 1.5,
-  xarrows = x,
-  subrotate_degrees = c(180, 270, 90), dist_construct_label = .7,
+  subradius = .5,
+  size_facet_labels = 2,
+  size_cor_labels_inner = 1.5,
+  subrotate_degrees = c(180, 270, 90),
+  dist_construct_label = .7,
   rotate_test_labels_degrees = c(0, 120, 0),
   cor_labels_tests = FALSE)
 mychart
@@ -107,13 +139,19 @@ mychart
 ## ---- fig.width=10, fig.height=10, out.height="685px", out.width="685px", dev='png'----
 mychart <- nested_chart(
   data = self_confidence,
-  subradius = .5, size_facet_labels = 2, size_cor_labels_inner = 1.5,
-  xarrows = x,
-  subrotate_degrees = c(180, 270, 90), dist_construct_label = .7,
+  subradius = .5,
+  size_facet_labels = 2,
+  size_cor_labels_inner = 1.5,
+  subrotate_degrees = c(180, 270, 90),
+  dist_construct_label = .7,
   rotate_construct_label_degrees = -15,
   rotate_test_labels_degrees = c(0, 120, 0),
-  size_construct_label = 1.3, size_test_labels = 1.2,
-  width_circles_inner = 1.2, width_circles = 1.2, width_axes_inner = 1.2, width_axes = 1.2)
+  size_construct_label = 1.3,
+  size_test_labels = 1.2,
+  width_circles_inner = 1.2,
+  width_circles = 1.2,
+  width_axes_inner = 1.2,
+  width_axes = 1.2)
 mychart
 
 ## -----------------------------------------------------------------------------

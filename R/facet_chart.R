@@ -2,8 +2,9 @@
 #'
 #' Creates a facet chart, showing the facets of a test.
 #'
-#' @param data SEM estimates in the appropriate format, given by the input
-#'   functions.
+#' @param data Object of class IPV as created by the function 'ipv_est'
+#' @param test character; name of the test to plot; defaults to the first in the
+#'   list.
 #' @param cd_method character; method to summarize center distances, either
 #'   "mean" or "aggregate", see details; defaults to "aggregate".
 #' @param facet_order character; vector of facet names in desired order
@@ -54,6 +55,9 @@
 #' @param width_tick integer; axis tick line width relative to default.
 #' @param size_tick_label integer; axis tick font size relative to default.
 #' @param size_cor_labels integer; correlation font size relative to default.
+#' @param size_marker integer; size (in inches) of the value marker  at the
+#'   circle border that indicates the center distance, a value of 0 omits the
+#'   marker; defaults to .1
 #'
 #' @details To summarize center distances (\code{cd_method}), the "mean" method
 #'   computes the average center distance (compute cds first, summarize across
@@ -87,11 +91,12 @@
 #'
 #' @examples
 #' # as simple as that:
-#' facet_chart(SMTQ)
+#' facet_chart(self_confidence, test = "SMTQ")
 #'
 #' @export
 facet_chart <- function(
   data,
+  test = NULL,
   cd_method = "aggregate",
   facet_order = NULL,
   subradius = 0,
@@ -121,7 +126,16 @@ facet_chart <- function(
   width_axes = 1,
   width_circles = 1,
   width_tick = 1,
-  size_tick_label = 1){
+  size_tick_label = 1,
+  size_marker = .1){
+
+  if (is.null(test)) {
+    test <- names(data$est$tests)[1]
+  }
+  if (!test %in% names(data$est$tests)) {
+    stop(paste("There is no test called ", test, sep = ""))
+  }
+  data <- data$est$tests[[test]]
 
   coord <- coord_facets(
     data = data,
@@ -157,7 +171,8 @@ facet_chart <- function(
     width_axes = width_axes,
     width_circles = width_circles,
     width_tick = width_tick,
-    size_tick_label = size_tick_label)
+    size_tick_label = size_tick_label,
+    size_marker = size_marker)
 
   return(myipv)
 }
@@ -198,6 +213,9 @@ facet_chart <- function(
 #' @param width_tick integer; axis tick line width relative to default.
 #' @param size_tick_label integer; axis tick font size relative to default.
 #' @param size_cor_labels integer; correlation font size relative to default.
+#' @param size_marker integer; size (in inches) of the value marker  at the
+#'   circle border that indicates the center distance, a value of 0 omits the
+#'   marker; defaults to .1
 #'
 #' @details Use \code{\link{facet_chart}} to create facet charts.
 #'
@@ -225,7 +243,8 @@ plot_facets <- function(
   width_axes = 1,
   width_circles = 1,
   width_tick = 1,
-  size_tick_label = 1){
+  size_tick_label = 1,
+  size_marker = .1){
 
 
   # preparation ----------------------------------------------------------------
@@ -349,6 +368,10 @@ plot_facets <- function(
       data = coord$c_axes,
       ggplot2::aes_string(x = "x0", y = "y0", xend = "x1", yend = "y1"),
       size = 1.5 * size * width_axes,
+      arrow = ggplot2::arrow(
+        angle = 90,
+        ends = "last",
+        length = ggplot2::unit(size_marker, "inches")),
       color = "black") +
 
     # test label

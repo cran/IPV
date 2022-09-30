@@ -6,6 +6,7 @@
 \usage{
 facet_chart(
   data,
+  test = NULL,
   cd_method = "aggregate",
   facet_order = NULL,
   subradius = 0,
@@ -35,12 +36,15 @@ facet_chart(
   width_axes = 1,
   width_circles = 1,
   width_tick = 1,
-  size_tick_label = 1
+  size_tick_label = 1,
+  size_marker = 0.1
 )
 }
 \arguments{
-\item{data}{SEM estimates in the appropriate format, given by the input
-functions.}
+\item{data}{Object of class IPV as created by the function 'ipv_est'}
+
+\item{test}{character; name of the test to plot; defaults to the first in the
+list.}
 
 \item{cd_method}{character; method to summarize center distances, either
 "mean" or "aggregate", see details; defaults to "aggregate".}
@@ -121,6 +125,10 @@ global label counter-clockwise by.}
 \item{width_tick}{integer; axis tick line width relative to default.}
 
 \item{size_tick_label}{integer; axis tick font size relative to default.}
+
+\item{size_marker}{integer; size (in inches) of the value marker  at the
+circle border that indicates the center distance, a value of 0 omits the
+marker; defaults to .1}
 }
 \value{
 Object of the class "ggplot".
@@ -157,7 +165,7 @@ To summarize center distances (\code{cd_method}), the "mean" method
 }
 \examples{
 # as simple as that:
-facet_chart(SMTQ)
+facet_chart(self_confidence, test = "SMTQ")
 
 }
 \seealso{

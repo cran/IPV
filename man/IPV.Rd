@@ -18,9 +18,9 @@ The IPV package provides the following functions.
 \section{Chart Functions}{
 
 
-  Chart functions create a ggplot2 object (the chart). There are three types
-  of charts. \code{\link{item_chart}} \code{\link{facet_chart}}
-  \code{\link{nested_chart}}
+  Chart functions create a ggplot2 object (the chart) and (optionally) a
+  graphics file. There are three types of charts. \code{\link{item_chart}}
+  \code{\link{facet_chart}} \code{\link{nested_chart}}
 }
 
 \section{Input Functions}{
@@ -42,7 +42,7 @@ The IPV package provides the following functions.
   a nested chart. Use this to inspect the absolute values underlying the
   charts.
 
-  The function \code{\link{rename}} enables quick changes of the labels for
+  The function \code{\link{relabel}} enables quick changes of the labels for
   variables.
 }
 
